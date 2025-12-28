@@ -52,3 +52,62 @@ If we're using a multi-configuration generator, we will specify the build config
 cmake --build build --config Debug
 ./build/Debug/hello
 ```
+
+## Step 1: Getting Started
+
+In this step we will be able to describe executables, libraries, source and header files, and the linkage relationships between them using CMake.
+
+CMake revolves around one or more files named CMakeLists.txt (or CML). Within a given software project, a CMakeLists.txt will exist within any (but not all) directory where we want to provide instructions to CMake on how to handle files and operations local to that directory or subdirectories.
+
+The project root should contain one as the entry point for CMake and always contain the same two commands at or near the top the file.
+
+```.txt
+cmake_minimum_required(VERSION 3.X)
+
+project(MyProjectName)
+```
+
+The `cmake_minimum_required()` is a compatibility guarantee and ensures that CMake will adopt the behavior of the listed version.
+
+The `project()` informs CMake that what follows is the description of a distinct software project of a given name and CMake performs various checks to ensure the environment is suitable for building software.
+
+Also, there are four backbone commands of most CMake usage, which will be introduced and learned during the tutorial:
+
+- `add_executable()` and `add_library()` commands for describing output artifacts the software project wants to produce.
+- `target_sources()` command for associating input files with their respective output artifacts.
+- `target_link_libraries()` command for associating output artifacts with one another.
+
+In other words, we use the commands to tell CMake to create **output artifacts**, which can be libraries or executables, and we associate those with **input files** or other libraries (so our output artifact can use and access them).
+
+### Building an Executable
+
+We need `add_executable()`. This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties. Targets are simply names.
+
+Some examples of properties are:
+
+- The artifact kind (executable, library, header collection, etc)
+- Source files
+- Include directories
+- Output name of an executable or library
+- Dependencies
+- Compiler and linker flags
+- and many more...
+
+So, we write `add_executable(MyProgram)` to create the "MyProgram" target, which is a name we can use from now on to add properties like source files we want to build and link. The primary command for this is `target_sources()`, which takes as arguments a target name followed by one or more collections of files. For example:
+
+```.txt
+target_sources(MyProgram
+  PRIVATE
+    main.cxx
+)
+```
+
+Each collection of files is prefixed by a scope keyword (here: PRIVATE) which describe how a property should be inherited by dependents of our target. This is covered in depth in [Linking Libraries and Executables](#linking-libraries-and-executables).
+
+Note: Paths in CMake are generally either absolute, or relative to the CMAKE_CURRENT_SOURCE_DIR (normally, this means relative to the location of the current CML)
+
+### Building a Library
+
+### Linking Libraries and Executables
+
+### Subdirectories
