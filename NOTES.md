@@ -108,6 +108,40 @@ Note: Paths in CMake are generally either absolute, or relative to the CMAKE_CUR
 
 ### Building a Library
 
+We just use the command `add_library(MyLibrary)` which is exactly as `add_executables()` but for libraries.
+
+We will also use **header files**. Header files are not a build requirement. They are a usage requirement. We need to know about header files in order to build other parts of a given target.
+
+Header files are described slightly differently than implementation files like tutorial.cxx. They're also going to need different scope keywords than the PRIVATE keyword we have used so far.
+
+To describe a collection of header files, we're going to use what's known as a `FILE_SET`. Therefore, **we add sources/input files to the library with the following:**
+
+```.txt
+target_sources(MyLibrary
+  PRIVATE
+    library_implementation.cxx
+
+  PUBLIC
+    FILE_SET myHeaders
+    TYPE HEADERS
+    BASE_DIRS
+      include
+    FILES
+      include/library_header.h
+)
+```
+
+First, **we have our implementation file as a PRIVATE source**. However, **we use PUBLIC for our header file**. This allows consumers of our library to "see" the library's header files.
+
+Following the scope keyword is a `FILE_SET`, **a collection of files to be described as a single unit**. A `FILE_SET` consists of the following parts:
+
+- `FILE_SET <name>` is the name of the `FILE_SET`. This is a handle which we can use to describe the collection in other contexts.
+- `TYPE <type>` is the kind of files we are describing. Most commonly this will be headers, but newer versions of CMake support other types like C++20 modules.
+- `BASE_DIRS` is the "base" locations for the files. This can be most easily understood as the locations that will be described to compilers for header discovery via -I flags. **When compiling C/C++ code, the compiler needs to know where to find header files. The -I flag tells the compiler "look in this directory for header files."** This means, we can use this BASE_DIRS to get the desired `#include` directives.
+- `FILES` is the list of files, same as with the implementation sources list earlier.
+
+**In the exercise**, for BASE_DIRS we need to determine the directory which will allow for the desired `#include <MathFunctions.h>` directive. To achieve this, the MathFunctions folder itself will be a base directory. We would make a different choice if the desired include directive were `#include <MathFunctions/MathFunctions.h>`.
+
 ### Linking Libraries and Executables
 
 ### Subdirectories
