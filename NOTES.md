@@ -264,3 +264,15 @@ CMake variables are names for strings; or put another way, a CMake variable is i
 **This leads to a common pattern in CMake code where functions and macros aren't passed values, but rather, they are passed the names of variables which contain those values. Thus ListVar does not contain the value of the list we need to append to, it contains the name of a list, which contains the value we need to append to.**
 
 **When expanding the variable with `${ListVar}`, we will get the name of the list. If we expand that name with `${${ListVar}}`, we will get the values the list contains.**
+
+### Conditionals and Loops
+
+When given a string, `if()` will first check if it is one of the known constant values previously discussed. If the string isn't one of those values the command assumes it is a variable, and checks the brace-expanded contents of that variable to determine the result of the conditional.
+
+Strings containing whitespace require double quotes, else they are treated like lists; CMake will concatenate the elements together with semicolons. The reverse is also true, when brace-expanding lists it is necessary to do so inside quotes if we want to preserve the semicolons. Otherwise CMake will expand the list items into space-separate strings.
+
+`if()`, recognize the difference between quoted and unquoted strings. `if()` will only check that the given string represents a variable when the string is unquoted.
+
+Finally, `if()` provides several useful comparison modes such as `STREQUAL` for string matching, `DEFINED` for checking the existence of a variable, and `MATCHES` for regular expression checks. It also supports the typical logical operators, `NOT`, `AND`, and `OR`.
+
+**CMake provides two loop structures, `while()`, which follows the same rules as `if()` for checking a loop variable, and `foreach()`, which iterates over lists of strings.**
