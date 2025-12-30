@@ -276,3 +276,11 @@ Strings containing whitespace require double quotes, else they are treated like 
 Finally, `if()` provides several useful comparison modes such as `STREQUAL` for string matching, `DEFINED` for checking the existence of a variable, and `MATCHES` for regular expression checks. It also supports the typical logical operators, `NOT`, `AND`, and `OR`.
 
 **CMake provides two loop structures, `while()`, which follows the same rules as `if()` for checking a loop variable, and `foreach()`, which iterates over lists of strings.**
+
+### Organizing & the Include Command
+
+For small CMake functions and utilities, it is often beneficial for them to live in their own `.cmake` files outside the project CMLs and separate from the rest of the build system. This allows for separation of concerns, removing the project-specific elements from the utilities we are using to describe them.
+
+To incorporate these separate `.cmake` files into our project, we use the `include()` command. This command immediately begins interpreting the contents of the `include()`'d file in the scope of the parent CML. It is as if the entire file were being called as a macro.
+
+**Traditionally, these kinds of `.cmake` files live in a folder named "cmake" inside the project root.**
