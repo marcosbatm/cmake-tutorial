@@ -144,4 +144,47 @@ Following the scope keyword is a `FILE_SET`, **a collection of files to be descr
 
 ### Linking Libraries and Executables
 
+We must introduce a new command, `target_link_libraries()`. It does a great deal more than just invoke linkers. It describes relationships between targets generally.
+
+```.txt
+target_link_libraries(MyProgram
+  PRIVATE
+    MyLibrary
+)
+```
+
+**scope keywords** describe how properties are made available to targets. There are three of them, **PRIVATE**, **INTERFACE**, and **PUBLIC**.
+
+- A **PRIVATE** property is only available to the target which owns it.
+- An **INTERFACE** property is only available to targets which link the owning target. The owning target does not have access to these properties. A header-only library is an example of a collection of **INTERFACE** properties.
+- A **PUBLIC** property is the union of the **PRIVATE** and **INTERFACE** properties.
+
+Example:
+
+```.txt
+target_sources(MyLibrary
+  PRIVATE
+    FILE_SET internalOnlyHeaders
+    TYPE HEADERS
+    FILES
+      InternalOnlyHeader.h
+
+  INTERFACE
+    FILE_SET consumerOnlyHeaders
+    TYPE HEADERS
+    FILES
+      ConsumerOnlyHeader.h
+
+  PUBLIC
+    FILE_SET publicHeaders
+    TYPE HEADERS
+    FILES
+      PublicHeader.h
+)
+```
+
+This call to `target_sources()` will **modify two properties of the MyLibrary target**. `HEADER_SETS` and `INTERFACE_HEADER_SETS`, which both contain lists of header file sets. The value internalOnlyHeaders will be added to `HEADER_SETS`, consumerOnlyHeaders to `INTERFACE_HEADER_SETS`, and publicHeaders will be added to both.
+
+When a given target is being built, it will use its own non-interface properties (eg, HEADER_SETS), combined with the interface properties of any targets it links to (eg, INTERFACE_HEADER_SETS).
+
 ### Subdirectories
