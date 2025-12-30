@@ -188,3 +188,9 @@ This call to `target_sources()` will **modify two properties of the MyLibrary ta
 When a given target is being built, it will use its own non-interface properties (eg, HEADER_SETS), combined with the interface properties of any targets it links to (eg, INTERFACE_HEADER_SETS).
 
 ### Subdirectories
+
+We want to make sure we keep commands local to the files they are dealing with. It can be very useful for large projects with many targets and files.
+
+The `add_subdirectory(SubdirectoryName)` command allows us to incorporate CMLs located in subdirectories of the project. When a CMakeLists.txt in a subdirectory is being processed by CMake all relative paths described in the subdirectory CML are relative to that subdirectory
+
+**Note:** Be sure to pay attention to the path changes necessary when moving the `target_sources()` commands into subdirectories.
