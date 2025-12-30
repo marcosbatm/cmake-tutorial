@@ -61,7 +61,7 @@ CMake revolves around one or more files named CMakeLists.txt (or CML). Within a 
 
 The project root should contain one as the entry point for CMake and always contain the same two commands at or near the top the file.
 
-```.txt
+```cmake
 cmake_minimum_required(VERSION 3.X)
 
 project(MyProjectName)
@@ -95,7 +95,7 @@ Some examples of properties are:
 
 So, we write `add_executable(MyProgram)` to create the "MyProgram" target, which is a name we can use from now on to add properties like source files we want to build and link. The primary command for this is `target_sources()`, which takes as arguments a target name followed by one or more collections of files. For example:
 
-```.txt
+```cmake
 target_sources(MyProgram
   PRIVATE
     main.cxx
@@ -116,7 +116,7 @@ Header files are described slightly differently than implementation files like t
 
 To describe a collection of header files, we're going to use what's known as a `FILE_SET`. Therefore, **we add sources/input files to the library with the following:**
 
-```.txt
+```cmake
 target_sources(MyLibrary
   PRIVATE
     library_implementation.cxx
@@ -146,7 +146,7 @@ Following the scope keyword is a `FILE_SET`, **a collection of files to be descr
 
 We must introduce a new command, `target_link_libraries()`. It does a great deal more than just invoke linkers. It describes relationships between targets generally.
 
-```.txt
+```cmake
 target_link_libraries(MyProgram
   PRIVATE
     MyLibrary
@@ -161,7 +161,7 @@ target_link_libraries(MyProgram
 
 Example:
 
-```.txt
+```cmake
 target_sources(MyLibrary
   PRIVATE
     FILE_SET internalOnlyHeaders
@@ -194,3 +194,73 @@ We want to make sure we keep commands local to the files they are dealing with. 
 The `add_subdirectory(SubdirectoryName)` command allows us to incorporate CMLs located in subdirectories of the project. When a CMakeLists.txt in a subdirectory is being processed by CMake all relative paths described in the subdirectory CML are relative to that subdirectory
 
 **Note:** Be sure to pay attention to the path changes necessary when moving the `target_sources()` commands into subdirectories.
+
+## Step 2: CMakeLang Fundamentals
+
+In the wild, we will encounter a great deal more complexity than simply describing lists of source and header files.
+
+To deal with this, CMake provides a "CMake Languague" (a.k.a. *CMakeLang*), a Turing-complete domain-specific language for describing the process of building software. Understanding the fundamentals of this language will be necessary to write more complex CMLs and other CMake files.
+
+However, CMakeLang is not well suited to describing things which are not related to building software. Oftentimes the correct answer is to write a tool in a general purpose programming language which solves the problem, and teach CMake how to invoke that tool as part of the build process.
+
+This step is an exception to the tutorial sequencing, it'll be a sandbox to explore languague features without building software. It neither builds on Step1, nor is the starting point for Step3.
+
+The only fundamental types in CMakeLang are strings and lists. Every object in CMake is a string, and lists are themselves strings which contain semicolons as separators. Booleans, numbers, JSON objects, or otherwise are processed by consuming a string, doing some internal conversion logic (in a language other than CMakeLang), and then converting back to a string for any potential output.
+
+We can create a variable, which is to say a name for a string, using the `set()` command. And its value can be accessed using brace expansion for example inside the `message()` command to print.
+
+```cmake
+set(var "World!")
+message("Hello ${var}")
+```
+
+And then, we use `cmake -P <file>` to execute. `cmake -P` is called "script mode", it informs CMake this file is not intended to have a `project()` command.
+
+Conditionals are entirely by convention of which strings are considered true and which are considered false. "True", "On", "Yes", and (strings representing) non-zero numbers are truthy, while "False" "Off", "No", "0", "Ignore", "NotFound", and the empty string are all considered false.
+
+**Taking some time to consult the `if()` documentation on expressions is worthwhile.** It's recommended to stick to a single pair for a given context, such as "True"/"False" or "On"/"Off".
+
+The `list()` command is useful for manipulating lists, which are strings with semicolons. Many structures within CMake expect to operate with this convention. As an example, we can use the `foreach()` command to iterate over a list.
+
+CMakeLang Code:
+
+```cmake
+set(stooges "Moe;Larry")
+list(APPEND stooges "Curly")
+
+message("Stooges contains: ${stooges}")
+
+foreach(stooge IN LISTS stooges)
+  message("Hello, ${stooge}")
+endforeach()
+```
+
+CMakeLang Output:
+
+```bash
+$ cmake -P CMakeLists.txt
+Stooges contains: Moe;Larry;Curly
+Hello, Moe
+Hello, Larry
+Hello, Curly
+```
+
+### Macros, Functions and Lists
+
+These can be very helpful when constructing lots of similar targets, like tests, for which we will want to call similar sets of commands over and over again. We do so with `function()` and `macro()`.
+
+Like with many languages, the difference between functions and macros is one of scope. In CMakeLang, both `function()` and `macro()` can "see" all the variables created in all the frames above them. However, a `macro()` acts semantically like a text replacement, so any side effects the macro creates are visible in their calling context. If we create or change a variable in a macro, the caller will see the change.
+
+On the other hand, `function()` creates its own variable scope. To propagate changes to the parent which called the function, we must use `set(<var> <value> PARENT_SCOPE)`.
+
+In CMake 3.25, the `return(PROPAGATE)` option was added, which works the same as `set(PARENT_SCOPE)` but provides slightly better ergonomics.
+
+Lastly, `macro()` and `function()` both support variadic arguments via the ARGV variable, a list containing all arguments passed to the command, and the ARGN variable, containing all arguments past the last expected argument.
+
+`.cmake` is the standard extension for CMakeLang files when not contained in a CMakeLists.txt
+
+CMake variables are names for strings; or put another way, a CMake variable is itself a string which can brace expand into a different string.
+
+**This leads to a common pattern in CMake code where functions and macros aren't passed values, but rather, they are passed the names of variables which contain those values. Thus ListVar does not contain the value of the list we need to append to, it contains the name of a list, which contains the value we need to append to.**
+
+**When expanding the variable with `${ListVar}`, we will get the name of the list. If we expand that name with `${${ListVar}}`, we will get the values the list contains.**
