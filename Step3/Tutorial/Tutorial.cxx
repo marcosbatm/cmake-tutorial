@@ -1,7 +1,7 @@
 // A simple program that computes the square root of a number
 
 // TODO3: Include <format>
-
+#include <format>
 #include <iostream>
 #include <string>
 
@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
   if (argc < 2) {
     // TODO4: Convert the print to use std::format
-    std::cout << "Usage: " << argv[0] << " number" << std::endl;
+    std::cout << "Usage: " << argv[0] << " number\n";
     return 1;
   }
 
@@ -21,6 +21,5 @@ int main(int argc, char* argv[])
   // calculate square root
   double const outputValue = mathfunctions::sqrt(inputValue);
   // TODO5: Convert the print to use std::format
-  std::cout << "The square root of " << inputValue << " is " << outputValue
-            << std::endl;
+  std::cout << "The square root of " << inputValue << " is " << outputValue << "\n";
 }

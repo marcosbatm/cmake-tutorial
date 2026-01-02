@@ -351,3 +351,19 @@ ShadowVariable: In the shadows
 ```
 
 ### Using Options
+
+We can imagine a scenario where consumers really want our library, and the Tutorial utility is a "take it or leave it" add-on. In that case, we might want to add an option to allow consumers to disable building our Tutorial binary, building only the MathFunctions library.
+
+With our knowledge of options, conditionals, and cache variables we have all the pieces we need to make this configuration available.
+
+### CMAKE Variables
+
+CMake has several important normal and cache variables provided to allow packagers to control the build. Decisions such as compilers, default flags, search locations for packages, and much more are all controlled by **CMake's own configuration variables**.
+
+Among the most important are language standards. As the language standard can have significant impact on the ABI presented by a given package. For example, it's quite common for libraries to use standard C++ templates on later standards, and provide polyfills on earlier standards.
+
+Ensuring all of our targets are built under the same language standard is achieved with the `CMAKE_<LANG>_STANDARD` cache variables. For C++, this is `CMAKE_CXX_STANDARD`.
+
+Do not `set()` `CMAKE_` globals without very strong reasons for doing so. We'll discuss better methods for targets to communicate requirements like definitions and minimum standards in later steps.
+
+Configuration variables are, by convention, prefixed with the provider of the variable. CMake configuration variables are prefixed with `CMAKE_`, while projects should prefix their variables with `<PROJECT>_`. The tutorial configuration variables follow this convention, and are prefixed with `TUTORIAL_`.
