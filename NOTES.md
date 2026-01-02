@@ -284,3 +284,70 @@ For small CMake functions and utilities, it is often beneficial for them to live
 To incorporate these separate `.cmake` files into our project, we use the `include()` command. This command immediately begins interpreting the contents of the `include()`'d file in the scope of the parent CML. It is as if the entire file were being called as a macro.
 
 **Traditionally, these kinds of `.cmake` files live in a folder named "cmake" inside the project root.**
+
+## Step 3: Configuration and Cache Variables
+
+CMake has project-specific configuration variables. CMake has many ways that an invoking user or process can communicate these, but the most fundamental of them are `-D` flags.
+
+We'll explore how to provide project configuration options from within a CML, and how to invoke CMake to take advantage of configuration options provided by both CMake and individual projects.
+
+We will want to provide reasonable defaults for these configuration choices, and a way to communicate the purpose of a given option. This function is provided by the `option()` command.
+
+```cmake
+option(COMPRESSION_SOFTWARE_USE_ZLIB "Support Zlib compression" ON)
+option(COMPRESSION_SOFTWARE_USE_ZSTD "Support Zstd compression" ON)
+
+if(COMPRESSION_SOFTWARE_USE_ZLIB)
+  message("I will use Zlib!")
+  # ...
+endif()
+
+if(COMPRESSION_SOFTWARE_USE_ZSTD)
+  message("I will use Zstd!")
+  # ...
+endif()
+```
+
+```bash
+$ cmake -B build \
+    -DCOMPRESSION_SOFTWARE_USE_ZLIB=OFF
+...
+I will use Zstd!
+```
+
+**The names created by `-D` flags and `option()` are cache variables.** Cache variables are **globally visible** variables which are *sticky*, their value is difficult to change after it is initially set. In fact they are so sticky that, in project mode, **CMake will save and restore cache variables across multiple configurations**. If a cache variable is set once, **it will remain until another `-D` flag preempts the saved variable**.
+
+CMake has dozens of normal and cache variables used for configuration, documented at `cmake-variables(7)`.
+
+`set()` can also be used to manipulate cache variables, but will not change a variable which has already been created.
+
+```cmake
+set(StickyCacheVariable "I will not change" CACHE STRING "")
+set(StickyCacheVariable "Overwrite StickyCache" CACHE STRING "")
+
+message("StickyCacheVariable: ${StickyCacheVariable}")
+```
+
+```bash
+$ cmake -P StickyCacheVariable.cmake
+StickyCacheVariable: I will not change
+```
+
+Because `-D` flags are processed before any other commands, they take precedence for setting the value of a cache variable. Also, cache variables can be shadowed by normal variables. We can observe this by `set()`'ing a variable to have the same name as a cache variable, and then using `unset()` to remove the normal variable.
+
+```cmake
+set(ShadowVariable "In the shadows" CACHE STRING "")
+set(ShadowVariable "Hiding the cache variable")
+message("ShadowVariable: ${ShadowVariable}")
+
+unset(ShadowVariable)
+message("ShadowVariable: ${ShadowVariable}")
+```
+
+```bash
+$ cmake -P ShadowVariable.cmake
+ShadowVariable: Hiding the cache variable
+ShadowVariable: In the shadows
+```
+
+### Using Options
