@@ -367,3 +367,47 @@ Ensuring all of our targets are built under the same language standard is achiev
 Do not `set()` `CMAKE_` globals without very strong reasons for doing so. We'll discuss better methods for targets to communicate requirements like definitions and minimum standards in later steps.
 
 Configuration variables are, by convention, prefixed with the provider of the variable. CMake configuration variables are prefixed with `CMAKE_`, while projects should prefix their variables with `<PROJECT>_`. The tutorial configuration variables follow this convention, and are prefixed with `TUTORIAL_`.
+
+### CMakePresets.json
+
+Managing these configuration values can quickly become overwhelming. In CI systems it is appropriate to record these as part of a given CI step. When developing code locally, typing all these options even once might be error prone. If a fresh configuration is needed for any reason, doing so multiple times could be exhausting.
+
+There are many and varied solutions to this problem, and your choice is ultimately up to your preferences as a developer. It would be impossible to fully enumerate every possible configuration workflow here. Instead we will explore CMake's built-in solution: **CMake Presets**, which give us a format to name and express collections of CMake configuration options.
+
+Presets are capable of expressing entire CMake workflows, from configuration, through building, all the way to installing the software package.
+
+**CMake Presets come in two standard files, `CMakePresets.json`, which is intended to be a part of the project and tracked in source control; and `CMakeUserPresets.json`, which is intended for local user configuration and should not be tracked in source control.**
+
+If we define a `CMakePresets.json` file like this:
+
+```json
+{
+  "version": 4,
+  "configurePresets": [
+    {
+      "name": "example-preset",
+      "cacheVariables": {
+        "EXAMPLE_FOO": "Bar",
+        "EXAMPLE_QUX": "Baz"
+      }
+    }
+  ]
+}
+```
+
+Then we can use the preset simply by calling:
+
+```bash
+cmake -B build --preset example-preset
+```
+
+CMake will search for files named CMakePresets.json and CMakeUserPresets.json, and load the named configuration from them if available. **Command line flags can be mixed with presets. Command line flags have precedence over values found in a preset.**
+
+Presets also support limited macros, variables that can be brace-expanded inside the preset. The only one of interest to us is the `${sourceDir}` macro, which expands to the root directory of the project. We can use this to set our build directory, skipping the `-B` flag when configuring the project.
+
+```json
+{
+  "name": "example-preset",
+  "binaryDir": "${sourceDir}/build"
+}
+```
