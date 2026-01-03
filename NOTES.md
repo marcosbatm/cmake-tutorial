@@ -411,3 +411,90 @@ Presets also support limited macros, variables that can be brace-expanded inside
   "binaryDir": "${sourceDir}/build"
 }
 ```
+
+## Step 4: In-Depth CMake Target Commands
+
+In this step we will go over all the available target commands in CMake. Not all target commands are created equal. We have already discussed the two most important target commands, `target_sources()` and `target_link_libraries()`. Of the remaining commands, some are almost as common as these two, others have more advanced applications, and a couple should only be used as a last resort when other options are not available.
+
+We'll split these into three groups: the recommended and generally useful commands, the advanced and cautionary commands, and the "footgun" commands which should be avoided unless necessary.
+
+1. **Common/Recommended**
+
+    - `target_compile_definitions()`
+    - `target_compile_features()`
+    - `target_link_libraries()`
+    - `target_sources()`
+
+2. **Advanced/Caution**
+
+    - `get_target_property()`
+    - `set_target_properties()`
+    - `target_compile_options()`
+    - `target_link_options()`
+    - `target_precompile_headers()`
+
+3. **Esoteric/Footgun**
+
+    - `target_include_directories()`
+    - `target_link_directories()`
+
+This categorization is provided to give newcomers a simple intuition about which commands they should consider first when tackling a problem.
+
+The `get_target_property()` and `set_target_properties()` commands give direct access to a target's properties by name. They can even be used to attach arbitrary property names to a target.
+
+```cmake
+add_library(Example)
+set_target_properties(Example
+  PROPERTIES
+    Key Value
+    Hello World
+)
+
+get_target_property(KeyVar Example Key)
+get_target_property(HelloVar Example Hello)
+
+message("Key: ${KeyVar}")
+message("Hello: ${HelloVar}")
+```
+
+```bash
+$ cmake -B build
+...
+Key: Value
+Hello: World
+```
+
+The full list of target properties which are semantically meaningful to CMake are documented at cmake-properties(7), however most of these should be modified with their dedicated commands. Conversely, some lesser-used properties are only accessible via these commands.
+
+The `target_precompile_headers()` command takes a list of header files, similar to target_sources(), and creates a precompiled header from them. This precompiled header is then force included into all translation units in the target. This can be useful for build performance.
+
+### Features and Definitions
+
+In earlier steps we cautioned against globally setting `CMAKE_<LANG>_STANDARD` and overriding packagers' decision concerning which language standard to use. On the other hand, many libraries have a minimum required feature set they need in order to build, and for these it is appropriate to use the `target_compile_features()` command to communicate those requirements.
+
+```cmake
+target_compile_features(MyApp PRIVATE cxx_std_20)
+```
+
+The `target_compile_features()` command describes a minimum language standard as a target property. If the `CMAKE_<LANG>_STANDARD` is above this version, or the compiler default already provides this language standard, no action is taken. If additional flags are necessary to enable the standard, these will be added by CMake.
+
+For C++, the compile features are of the form `cxx_std_YY` where `YY` is the standardization year, e.g. `14`, `17`, `20`, etc.
+
+**Note:** This recommendation makes sense because if you link a library that only supports C++14, you might force it to compile with C++20. It's better to avoid "compiling everything with C++20", instead we want to "declare that a given target needs C++20 features".
+
+The `target_compile_definitions()` command describes compile definitions as target properties. It is the most common mechanism for communicating build configuration information to the source code itself.
+
+```cmake
+target_compile_definitions(MyLibrary
+  PRIVATE
+    MYLIBRARY_USE_EXPERIMENTAL_IMPLEMENTATION
+
+  PUBLIC
+    MYLIBRARY_EXCLUDE_DEPRECATED_FUNCTIONS
+)
+```
+
+It is neither required nor desired that we attach -D prefixes to compile definitions described with `target_compile_definitions()`. CMake will determine the correct flag for the current compiler.
+
+Essentially, **modern CMake is focused on being target-oriented**. Therefore **we use `target_compile_features()` and `target_compile_definitions()` to communicate language standard and compile definition requirements.**
+

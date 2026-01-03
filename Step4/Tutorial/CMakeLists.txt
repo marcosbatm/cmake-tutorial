@@ -13,7 +13,7 @@ target_link_libraries(Tutorial
 )
 
 # TODO4: Add a compile feature for C++20 support to Tutorial
-
+target_compile_features(Tutorial PRIVATE cxx_std_20)
 
 if(
   (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
