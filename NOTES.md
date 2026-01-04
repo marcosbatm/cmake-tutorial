@@ -514,3 +514,18 @@ We can achieve this by checking the `CMAKE_<LANG>_COMPILER_FRONTEND_VARIANT` var
 Even if a compiler accepts the flags we pass, the semantics of compiler flags change over time (especially with regards to warnings). **Projects should not turn warnings-as-error flags by default**, as this can break their build on otherwise innocuous compiler warnings included in later releases.
 
 **Note:** For errors and warnings, consider placing flags in `CMAKE_<LANG>_FLAGS` for local development builds and during CI runs (via **preset** or `-D` flags). We know exactly which compiler and toolchain are being used in these contexts, so we can customize the behavior precisely without risking build breakages on other platforms.
+
+### Include and Link Directories
+
+**It is generally unnecessary to directly describe include and link directories, as these requirements are inherited when linking together targets generated within CMake, or from external dependencies imported into CMake with commands we will cover in later steps.**
+
+If we happen to have some libraries or header files which are not described by a CMake target which we need to bring into the build, perhaps pre-compiled binaries provided by a vendor, we can incorporate with the target_link_directories() and target_include_directories() commands.
+
+```cmake
+target_link_directories(MyApp PRIVATE Vendor/lib)
+target_include_directories(MyApp PRIVATE Vendor/include)
+```
+
+These commands use properties which map to the -L and -I compiler flags (or whatever flags the compiler uses for link and include directories).
+
+Of course, passing a link directory doesn't tell the compiler to link anything into the build. For that we need `target_link_libraries()`. When `target_link_libraries()` is given an argument which does not map to a target name, it will add the string directly to the link line as a library to be linked into the build (prepending any appropriate flags, such a `-l`).

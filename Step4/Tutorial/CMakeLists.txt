@@ -10,6 +10,7 @@ target_sources(Tutorial
 target_link_libraries(Tutorial
   PRIVATE
     MathFunctions
+    VendorLib
 )
 
 # TODO4: Add a compile feature for C++20 support to Tutorial
