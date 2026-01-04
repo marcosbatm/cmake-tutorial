@@ -21,6 +21,7 @@ if(
 )
 
   # TODO9: Add the /W3 compile flag to Tutorial
+  target_compile_options(Tutorial PRIVATE /W3)
 
 elseif(
   (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
@@ -28,6 +29,7 @@ elseif(
 )
 
   # TODO10: Add the -Wall compile flag to Tutorial
+  target_compile_options(Tutorial PRIVATE -Wall)
 
 
 endif()

@@ -498,3 +498,19 @@ It is neither required nor desired that we attach -D prefixes to compile definit
 
 Essentially, **modern CMake is focused on being target-oriented**. Therefore **we use `target_compile_features()` and `target_compile_definitions()` to communicate language standard and compile definition requirements.**
 
+### Compile and Link Options
+
+We use `target_compile_options()` and `target_link_options()` to exercise specific control over the exact options being passed on the compile and link line.
+
+```cmake
+target_compile_options(MyApp PRIVATE -Wall -Werror)
+target_link_options(MyApp PRIVATE -T LinksScript.ld)
+```
+
+There are several problems with unconditionally calling `target_compile_options()` or `target_link_options()`. **The primary problem is compiler flags are specific to the compiler frontend being used**. In order to ensure that our project supports multiple compiler frontends, we must only pass compatible flags to the compiler.
+
+We can achieve this by checking the `CMAKE_<LANG>_COMPILER_FRONTEND_VARIANT` variable which tells us the style of flags supported by the compiler frontend. In versions after CMake 3.26 checking this variable alone is sufficient. Prior to CMake 3.26, it was only set for compilers with multiple frontend variants. **This tutorial step already includes correct logic for checking the compiler variant for MSVC, GCC, Clang, and AppleClang on CMake 3.23.**
+
+Even if a compiler accepts the flags we pass, the semantics of compiler flags change over time (especially with regards to warnings). **Projects should not turn warnings-as-error flags by default**, as this can break their build on otherwise innocuous compiler warnings included in later releases.
+
+**Note:** For errors and warnings, consider placing flags in `CMAKE_<LANG>_FLAGS` for local development builds and during CI runs (via **preset** or `-D` flags). We know exactly which compiler and toolchain are being used in these contexts, so we can customize the behavior precisely without risking build breakages on other platforms.
