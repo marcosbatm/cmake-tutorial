@@ -529,3 +529,34 @@ target_include_directories(MyApp PRIVATE Vendor/include)
 These commands use properties which map to the -L and -I compiler flags (or whatever flags the compiler uses for link and include directories).
 
 Of course, passing a link directory doesn't tell the compiler to link anything into the build. For that we need `target_link_libraries()`. When `target_link_libraries()` is given an argument which does not map to a target name, it will add the string directly to the link line as a library to be linked into the build (prepending any appropriate flags, such a `-l`).
+
+## Step 5: In-Depth CMake Library Concepts
+
+In this step you will learn about some of the most common kinds of libraries that CMake can describe. This will cover most of the in-project uses of `add_library()`.
+
+The `add_library()` command accepts the name of the library target to be created as its first argument. The second argument is an optional `<type>` for which the following values are valid:
+
+- `STATIC` Library: an archive of object files for use when linking other targets.
+- `SHARED` Library: a dynamic library that may be linked by other targets and loaded at runtime.
+- `MODULE` Library: a plugin that may not be linked by other targets, but may be dynamically loaded at runtime using dlopen-like functionality.
+- `OBJECT` Library: a collection of object files which have not been archived or linked into a library.
+- `INTERFACE` Library: a library target which specifies usage requirements for dependents but does not compile sources and does not produce a library artifact on disk.
+
+All of this definitions are explained thoroughly in `cmake-buildsystem(7)`'s [Binary Targets section](https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#binary-targets).
+
+### Static and Shared
+
+While the `add_library()` command supports explicitly setting `STATIC` or `SHARED`, and this is sometimes necessary, it is best to leave the second argument empty for most "normal" libraries which can operate as either.
+
+When not given a type, `add_library()` will create either a `STATIC` or `SHARED` library depending on the value of `BUILD_SHARED_LIBS`. If `BUILD_SHARED_LIBS` is true, a `SHARED` library will be created, otherwise it will be `STATIC`. CMake does not define the `BUILD_SHARED_LIBS` variable by default, meaning without project or user intervention `add_library()` will produce `STATIC` libraries.
+
+```cmake
+add_library(MyLib-static STATIC)
+add_library(MyLib-shared SHARED)
+
+# Depends on BUILD_SHARED_LIBS
+add_library(MyLib)
+```
+
+This is desirable behavior, as it allows packagers to determine what kind of library will be produced, and ensure dependents link to that version of the library without needing to modify their source code. In some contexts, fully static builds are appropriate, and in others shared libraries are desirable.
+
