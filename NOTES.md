@@ -560,3 +560,19 @@ add_library(MyLib)
 
 This is desirable behavior, as it allows packagers to determine what kind of library will be produced, and ensure dependents link to that version of the library without needing to modify their source code. In some contexts, fully static builds are appropriate, and in others shared libraries are desirable.
 
+### Interface Libraries
+
+`INTERFACE` libraries are those which **only** communicate usage requirements for other targets, they do not build or produce any artifacts of their own. As such all the properties of an `INTERFACE` library must themselves be `INTERFACE` properties.
+
+```cmake
+add_library(MyInterface INTERFACE)
+target_compile_definitions(MyInterface INTERFACE MYINTERFACE_COMPILE_DEF)
+```
+
+The most common kind of interface library in C++ development is a header-only library. Such libraries do not build anything, only providing the flags necessary to discover their headers.
+
+In our previous discussions of `target_sources(FILE_SET)`, we noted we can omit the `TYPE` parameter if the file set's name is the same as the file set's type. We also said we can omit the `BASE_DIRS` parameter if we want to use the current source directory as the only base directory.
+
+We're ready to introduce a **third shortcut**, we only need to include the `FILES` parameter if the headers are intended to be installed, such as public headers of a library.
+
+The `MathLogger` headers in this exercise are only used internally by the `MathFunctions` implementation. They will not be installed. This should make for a very abbreviated call to `target_sources(FILE_SET)`.
