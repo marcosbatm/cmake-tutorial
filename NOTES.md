@@ -576,3 +576,15 @@ In our previous discussions of `target_sources(FILE_SET)`, we noted we can omit 
 We're ready to introduce a **third shortcut**, we only need to include the `FILES` parameter if the headers are intended to be installed, such as public headers of a library.
 
 The `MathLogger` headers in this exercise are only used internally by the `MathFunctions` implementation. They will not be installed. This should make for a very abbreviated call to `target_sources(FILE_SET)`.
+
+### Object Libraries
+
+Object libraries have several advanced uses, but also tricky nuances which are difficult to fully enumerate in the scope of this tutorial.
+
+```cmake
+add_library(MyObjects OBJECT)
+```
+
+The most obvious drawback to object libraries is **the objects themselves cannot be transitively linked**. If an object library appears in the `INTERFACE_LINK_LIBRARIES` of a target, the dependents which link that target will not "see" the objects. The object library will act like an `INTERFACE` library in such contexts. In the general case, object libraries are only suitable for `PRIVATE` or `PUBLIC` consumption via `target_link_libraries()`.
+
+A common use case for object libraries is coalescing several library targets into a single archive or shared library object. Even within a single project libraries may be maintained as different targets for a variety of reasons, such as belonging to different teams within an organization. However, it may be desirable to distribute these as a single consumer-facing binary. Object libraries make this possible.
